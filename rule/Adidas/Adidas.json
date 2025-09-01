@@ -1,0 +1,28 @@
+{
+  "rules": [
+    {
+      "domain_suffix": [
+        "adidas.hu",
+        "adidas.com.sa",
+        "adidas.pl",
+        "adidas.com",
+        "adidas.co.in",
+        "adidas.ie",
+        "adidas.dk",
+        "adidas.ru",
+        "adidas.de",
+        "adidas.nl",
+        "adidas.at",
+        "adidas.com.cn",
+        "adidas.se",
+        "adidas.co.uk",
+        "adidas.cz",
+        "adidas.com.tw",
+        "adidas.ch",
+        "adidas.be",
+        "adidas.it"
+      ]
+    }
+  ],
+  "version": 2
+}

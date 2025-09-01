@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "domain_suffix": [
+        "91q.com",
+        "ttplayer.com",
+        "youyou.com",
+        "youyou001.com",
+        "qianqian.com",
+        "submusic.cn",
+        "dmhmusic.com",
+        "taihe.com"
+      ]
+    }
+  ],
+  "version": 2
+}
