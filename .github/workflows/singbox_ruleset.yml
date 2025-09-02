@@ -34,4 +34,4 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git push https://${GH_PAT}@github.com/<your-username>/singbox_ruleset.git main
+          git push https://${GH_PAT}@github.com/spenserlucy/singbox_ruleset.git main
