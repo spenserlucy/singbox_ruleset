@@ -1,37 +1,79 @@
-name: "Auto Sync Fork"
+name: "Auto Sync Fork & Update RuleSet"
 
 on:
   schedule:
-    - cron: "0 5 * * *"  # 每天 UTC 5点同步一次
+    - cron: "0 5 * * *"  # 每天 UTC 5点
   workflow_dispatch:
 
 jobs:
-  sync-fork:
+  update-rule-set:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
+      # 1️⃣ Checkout fork，禁用默认 token
       - name: Checkout fork
         uses: actions/checkout@v4
         with:
-          persist-credentials: false  # 禁用默认 GITHUB_TOKEN
-          fetch-depth: 0             # 获取完整历史，避免 merge 冲突
+          persist-credentials: false
+          fetch-depth: 0
 
+      # 2️⃣ 配置 git 用户
       - name: Set Git config
         run: |
           git config user.name "spenserlucy"
           git config user.email "spenserlucy@users.noreply.github.com"
 
+      # 3️⃣ 添加 upstream 并 fetch
       - name: Add upstream remote
         run: |
-          git remote add upstream https://github.com/senshinya/singbox_ruleset.git
+          git remote add upstream https://github.com/senshinya/singbox_ruleset.git || echo "Upstream already exists"
           git fetch upstream
 
+      # 4️⃣ Merge upstream main 到本地 fork
       - name: Merge upstream changes
         run: |
           git checkout main
-          git merge upstream/main --ff-only || echo "Already up to date"
+          git merge --ff-only upstream/main || echo "Already up to date"
 
-      - name: Push to fork
+      # 5️⃣ Setup sing-box
+      - name: Setup sing-box
+        env:
+          SING_BOX_DEB_URL: "https://github.com/SagerNet/sing-box/releases/download/v1.10.0-beta.5/sing-box_1.10.0-beta.5_linux_amd64.deb"
+        run: |
+          set -Eeuo pipefail
+          wget -O sing-box.deb $SING_BOX_DEB_URL
+          sudo dpkg -i sing-box.deb
+          rm sing-box.deb
+
+      # 6️⃣ Setup Python virtual environment
+      - name: Setup Python venv
+        run: |
+          set -Eeuo pipefail
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      # 7️⃣ Update rule-set
+      - name: Update rule-set
+        env:
+          MAXMIND_KEY: ${{ secrets.MAXMIND_KEY }}
+        run: |
+          set -Eeuo pipefail
+          source venv/bin/activate
+          python3 main.py
+
+      # 8️⃣ Compile rule-set
+      - name: Compile rule-set
+        run: |
+          bash compile.sh
+
+      # 9️⃣ Commit & Push to fork safely
+      - name: Commit and Push
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
+          set -Eeuo pipefail
+          git add .
+          git commit -m "Update rule-set $(date -u '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
           git push https://${GH_PAT}@github.com/spenserlucy/singbox_ruleset.git main
