@@ -2,7 +2,7 @@ name: "Auto Sync Fork"
 
 on:
   schedule:
-    - cron: "0 20 * * *"
+    - cron: "0 20 * * *"  # 每天 UTC 20点
   workflow_dispatch:
 
 jobs:
@@ -11,29 +11,33 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout fork
+      # 1️⃣ Checkout fork 并使用 GH_PAT
+      - name: Checkout fork with token
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          token: ${{ secrets.GH_PAT }}
+          persist-credentials: true
           fetch-depth: 0
 
+      # 2️⃣ 配置 Git 用户
       - name: Set Git config
         run: |
           git config user.name "spenserlucy"
           git config user.email "spenserlucy@users.noreply.github.com"
 
+      # 3️⃣ 添加 upstream 并 fetch
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/senshinya/singbox_ruleset.git || echo "Upstream already exists"
           git fetch upstream
 
-      - name: Merge upstream main
+      # 4️⃣ Merge upstream main 到本地 fork
+      - name: Merge upstream changes
         run: |
           git checkout main
           git merge --ff-only upstream/main || echo "Already up to date"
 
+      # 5️⃣ Push 更新到 fork
       - name: Push to fork
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git push https://${GH_PAT}@github.com/spenserlucy/singbox_ruleset.git main
+          git push origin main
