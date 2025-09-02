@@ -48,15 +48,20 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           set -Eeuo pipefail
+
+          # 配置提交信息
           git config user.name "senshinya"
           git config user.email "senshinya@users.noreply.github.com"
 
+          # 添加所有变动
           git add .
+
+          # 提交，如果没有变化则忽略
           git commit -m "Update rule-set $(date -u '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
 
           # 拉取远程最新代码并尝试 fast-forward 合并
           git fetch origin main
           git merge --ff-only origin/main || echo "Fast-forward merge not needed"
 
-          # 使用 GH_PAT 安全推送，不覆盖历史
+          # 使用 GH_PAT 安全推送
           git push https://${GH_PAT}@github.com/senshinya/singbox_ruleset.git HEAD:main
