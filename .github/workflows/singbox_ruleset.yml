@@ -58,5 +58,5 @@ jobs:
           git fetch origin main
           git merge --ff-only origin/main || echo "Fast-forward merge not needed"
 
-          # 安全推送，不覆盖历史
+          # 使用 GH_PAT 安全推送，不覆盖历史
           git push https://${GH_PAT}@github.com/senshinya/singbox_ruleset.git HEAD:main
