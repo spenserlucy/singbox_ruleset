@@ -1,24 +1,32 @@
-name: "Test Push with PAT"
+name: "Test Push with GH_PAT"
 
 on:
-  workflow_dispatch:  # 手动触发
+  workflow_dispatch:
 
 jobs:
   test-push:
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout"
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: "Modify repo"
+      - name: Debug GH_PAT
         run: |
-          echo "Test push at $(date -u '+%Y-%m-%d %H:%M:%S')" >> test.txt
+          if [ -z "${{ secrets.GH_PAT }}" ]; then
+            echo "❌ GH_PAT is empty"
+            exit 1
+          else
+            echo "✅ GH_PAT length: ${#{{ secrets.GH_PAT }}}"
+          fi
 
-      - name: "Commit and push"
+      - name: Make change
         run: |
-          set -Eeuo pipefail
+          echo "Updated at $(date -u '+%Y-%m-%d %H:%M:%S')" >> test.txt
+
+      - name: Commit and Push
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add test.txt
           git commit -m "Test push at $(date -u '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-          git push https://${{ secrets.GH_PAT }}@github.com/senshinya/singbox_ruleset.git HEAD:main
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/senshinya/singbox_ruleset.git HEAD:main
