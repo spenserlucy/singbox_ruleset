@@ -2,7 +2,7 @@ name: "Auto Sync Fork"
 
 on:
   schedule:
-    - cron: "0 5 * * *"  # 每天 UTC 5点
+    - cron: "0 20 * * *"
   workflow_dispatch:
 
 jobs:
@@ -11,7 +11,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      # 1️⃣ Checkout fork
       - name: Checkout fork
         uses: actions/checkout@v4
         with:
@@ -19,31 +18,33 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      # 2️⃣ Set Git config
       - name: Set Git config
         run: |
           git config user.name "spenserlucy"
           git config user.email "spenserlucy@users.noreply.github.com"
 
-      # 3️⃣ Add upstream remote and fetch
-      - name: Add upstream remote
+      - name: Add upstream remote and fetch
         run: |
           git remote add upstream https://github.com/senshinya/singbox_ruleset.git || echo "Upstream exists"
           git fetch upstream
 
-      # 4️⃣ Merge upstream main into local branch
       - name: Merge upstream main
         id: merge_upstream
         run: |
           git checkout main
-          # 尝试 fast-forward 合并
+          # 尝试 fast-forward 合并 upstream
           if git merge --ff-only upstream/main; then
             echo "merged=true" >> $GITHUB_OUTPUT
           else
             echo "merged=false" >> $GITHUB_OUTPUT
           fi
 
-      # 5️⃣ Push only if merged
+      - name: Ensure fork is up-to-date
+        if: steps.merge_upstream.outputs.merged == 'true'
+        run: |
+          git fetch origin main
+          git merge --ff-only origin/main || echo "Already up to date"
+
       - name: Push to fork if updated
         if: steps.merge_upstream.outputs.merged == 'true'
         run: |
